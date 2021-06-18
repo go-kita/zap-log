@@ -1,40 +1,34 @@
 package zap
 
 import (
-	"bytes"
 	"context"
-	"sync"
 
-	"github.com/go-kita/log/v3"
-
+	"github.com/go-kita/log"
 	"go.uber.org/zap"
 )
 
-// output is a log.Output based on Zap logger.
-type output struct {
+// outPutter is a log.OutPutter based on Zap logger.
+type outPutter struct {
 	out *zap.Logger
-	buf *sync.Pool
 }
 
-// NewOutput produce a log.Output based on zap.Logger
-func NewOutput(out *zap.Logger) log.Output {
-	return &output{
+var _ log.OutPutter = (*outPutter)(nil)
+
+// NewOutPutter produce a log.OutPutter based on zap.Logger
+func NewOutPutter(out *zap.Logger) log.OutPutter {
+	return &outPutter{
 		out: out,
-		buf: &sync.Pool{
-			New: func() interface{} {
-				return &bytes.Buffer{}
-			},
-		},
 	}
 }
 
-func (o *output) Output(ctx context.Context, level log.Level, msg string, fields []log.Field, addCallerSkip int) {
-	o.outFunc(level, addCallerSkip)(msg, zapFields(ctx, fields)...)
+func (o *outPutter) OutPut(
+	ctx context.Context, _ string, level log.Level, msg string, fields []log.Field, callDepth int) {
+	o.outFunc(level, callDepth)(msg, zapFields(ctx, fields)...)
 }
 
 type outFunc func(msg string, fields ...zap.Field)
 
-func (o *output) outFunc(level log.Level, addCallerSkip int) outFunc {
+func (o *outPutter) outFunc(level log.Level, addCallerSkip int) outFunc {
 	out := o.out
 	out = out.WithOptions(zap.AddCallerSkip(addCallerSkip + 2))
 	switch {
@@ -46,9 +40,6 @@ func (o *output) outFunc(level log.Level, addCallerSkip int) outFunc {
 		return out.Warn
 	case level == log.ErrorLevel:
 		return out.Error
-	case level == log.ClosedLevel:
-		return func(_ string, _ ...zap.Field) {
-		}
 	default:
 		return out.Error
 	}
@@ -71,12 +62,5 @@ func zapFields(ctx context.Context, fields []log.Field) []zap.Field {
 
 // NewLogger create a log.Logger of name based on zap.Logger.
 func NewLogger(name string, out *zap.Logger) log.Logger {
-	return log.NewStdLogger(name, NewOutput(out))
-}
-
-// MakeProvider make a log.LoggerProvider function.
-func MakeProvider(out *zap.Logger) log.LoggerProvider {
-	return func(name string) log.Logger {
-		return NewLogger(name, out)
-	}
+	return log.NewStdLogger(name, NewOutPutter(out))
 }
