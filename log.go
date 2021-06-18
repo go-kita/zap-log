@@ -64,3 +64,10 @@ func zapFields(ctx context.Context, fields []log.Field) []zap.Field {
 func NewLogger(name string, out *zap.Logger) log.Logger {
 	return log.NewStdLogger(name, NewOutPutter(out))
 }
+
+// MakeProvider make a log.LoggerProvider function.
+func MakeProvider(out *zap.Logger) log.LoggerProvider {
+	return func(name string) log.Logger {
+		return NewLogger(name, out)
+	}
+}

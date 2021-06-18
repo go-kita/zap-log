@@ -40,7 +40,8 @@ func TestZapLog(t *testing.T) {
 	}
 	log.GetLevelStore().Set("", log.DebugLevel)
 	log.GetLevelStore().Set("closed", log.ClosedLevel)
-	logger := NewLogger("", zl)
+	provider := MakeProvider(zl)
+	logger := provider("")
 	for i := log.DebugLevel; i <= log.ErrorLevel; i++ {
 		logger.AtLevel(context.Background(), i).
 			Print("abc")
@@ -51,7 +52,7 @@ func TestZapLog(t *testing.T) {
 		}
 		buf.Reset()
 	}
-	closed := NewLogger("closed", zl)
+	closed := provider("closed")
 	closed.AtLevel(context.Background(), log.InfoLevel).Print("abc")
 	got := buf.String()
 	buf.Reset()
