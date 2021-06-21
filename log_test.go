@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-kita/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/go-kita/log"
 )
 
 type MemorySink struct {

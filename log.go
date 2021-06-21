@@ -3,16 +3,15 @@ package zap
 import (
 	"context"
 
-	"github.com/go-kita/log"
 	"go.uber.org/zap"
+
+	"github.com/go-kita/log"
 )
 
 // outPutter is a log.OutPutter based on Zap logger.
 type outPutter struct {
 	out *zap.Logger
 }
-
-var _ log.OutPutter = (*outPutter)(nil)
 
 // NewOutPutter produce a log.OutPutter based on zap.Logger
 func NewOutPutter(out *zap.Logger) log.OutPutter {
